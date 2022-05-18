@@ -485,6 +485,153 @@ You should never do this! And if you take the time to learn how to use pipelines
 
 Let’s see a few examples of where we can solve a non-trivial problem with a few commands.
 
+### Checking consistency of a FASTA file
+
+Let’s say I have a FASTA file, and I suspect something is wrong with it. Specifically, I suspect that the same sequence name appears more than once (but I am not sure). Can I check that?
+
+Let’s make a silly example:
+
+```sh
+$ cat > foo.fa
+> chr1
+acgta
+> chr2
+acgtta
+> chr1
+accta
+```
+
+Here I `cat` into `foo.fa` and write the data I want to put in the file. When I am done, I press `CTRL-d`.
+
+As you can see, `chr1` appears twice, and that is a problem.
+
+I want to check if there are any duplicated sequence names. So, first I need to figure out how to get the sequence names out. Well, the only search command I know right now is `grep`, so maybe I can search for `>`. That is the symbol that starts a sequence name, after all.
+
+Here I have a slight problem. If I write `grep > foo.fa` I will be redirecting the output to `foo.fa` and I certainly do not want that. But I can get around it by putting the `>` in quotes.
+
+```sh
+$ grep ">" foo.fa
+> chr1
+> chr2
+> chr1
+```
+
+Great, now I have the sequence names.
+
+There is a command `uniq` that, amongst other things, will print the unique lines in the input. Or rather, it will compare adjacent lines and output those that are not duplicates, so it doesn’t quite do what it promises. Anyway, duplicated lines will show up adjacent if I sort them, so I can get the names in a format that `uniq` can work with if I pipe them through the command `sort`:
+
+```sh
+$ grep ">" foo.fa | sort
+> chr1
+> chr1
+> chr2
+```
+
+Now the duplication, `> chr1`, is on adjacent lines, and I can get the unique lines with
+
+```sh
+$ grep ">" foo.fa | sort | uniq
+> chr1
+> chr2
+```
+
+Still not what I want, though. Here I can’t see that I have a problem with `> chr1`. But `man uniq` will tell me that the option `-d` will make it print only duplicated lines, and thus the command
+
+```sh
+$ grep ">" foo.fa | sort | uniq -d
+> chr1
+```
+
+is the one I need to spot the problem.
+
+Writing your own program just to check this file’s consistency would be a bit of work, but by combining the three commands `grep`, `sort` and `uniq` we got there relatively effortless. (And if you were already familiar with the commands you would just have written the pipeline in a few seconds and have gotten your answer right away).
+
+### Finding rare or frequent values
+
+Now let’s imagine that I have a bunch of files containing analysis results or something on each line, and I am interested in either the most frequent results or the rare ones. Can I easily get those?
+
+Let’s just make one file and reuse two we already have.
+
+```sh
+$ echo foo bib bob > qix
+cat qux qax qix
+foo
+bar
+baz
+foo
+baz
+bar
+foo
+bib
+bob
+```
+
+I already know that I can sort the lines to get duplicates next to each other
+
+
+```sh
+$ sort qux qax qix
+bar
+bar
+baz
+baz
+bib
+bob
+foo
+foo
+foo
+```
+
+and when they are adjacent, maybe I can use `uniq` again? Yes, if I check `man uniq` I will find that I can get the count of each element using `-c`:
+
+```sh
+sort qux qax qix | uniq -c
+   2 bar
+   2 baz
+   1 bib
+   1 bob
+   3 foo
+```
+
+If these were truly gigantic files, this list would not be manageable, but I am not interested in all of it. Just the most frequent results, say, or the least frequent.
+
+The results are not sorted with respect to their frequency, but the count is in the first column, so if we sort the lines again, maybe we get what we want?
+
+```sh
+$ sort qux qax qix | uniq -c | sort
+   1 bib
+   1 bob
+   2 bar
+   2 baz
+   3 foo
+```
+
+Close enough, anyway.
+
+Well, there is one problem that we don’t spot here, but the lines will be sorted lexicographically and not numerically, and lexicographically `100 < 20 < 3`. We want the numbers sorted numerically, so you want to add the flag `-n` to `sort`, but we won’t see a difference here because all the counts are single digit.
+
+If I want the rarest values, they are at the top of the list, and I can get the top using the command `head`. To get top three, I can use:
+
+```sh
+$ sort qux qax qix | uniq -c | sort -n | head -n 3
+   1 bib
+   1 bob
+   2 bar
+```
+
+Likewise, I can get the most frequent from the bottom of the list using `tail`:
+
+```sh
+$ sort qux qax qix | uniq -c | sort -n | tail -n 3
+   2 bar
+   2 baz
+   3 foo
+```
+
+There are several commands involved here—two applications of `sort`, one of `uniq` and one of either `head` or `tail`—but each command does one single simple thing; it is the combination that solves the problem.
+
+With a little bit of practise, writing a pipeline like this is second nature, and you solve problems of this kind in minutes if not seconds.
+
 
 
 ### Permuted comparison
@@ -570,6 +717,16 @@ and if you want to clean up after yourself, you can delete the pipe we created w
 ```sh
 $ rm /tmp/s-qax
 ```
+
+Combined, for you sad PowerShell users:
+
+```sh
+$ mkfifo /tmp/s-qax
+$ sort qax > /tmp/s-qax &
+$ sort qux | diff - /tmp/s-qax
+$ rm /tmp/s-qax
+```
+
 
 
 
