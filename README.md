@@ -280,6 +280,32 @@ baz     baz
 ```
 
 
+### grep
+
+The `grep` command lets you search in files. The name has a weird mnemonic, `grep` stands for “global, regular expression, print”, a name that made perfect sense in the Elder Days where it was a command you could give the `ed` editor, but today it is pure nonsense. Instead, `grep` has become a verb in its own right, and you will hear programmers talk about “grepping” for stuff.
+
+The simplest usage is `grep word file` that will search for `word` in the file `file` and print all the lines where `word` is found.
+
+A boring example is this:
+
+```sh
+$ grep foo qux
+foo
+```
+
+It prints a single `foo` as there is one line in `qux` that contains `foo`.
+
+If you search in more than one file, `grep` will also tell you which file it found `word` in.
+
+```sh
+$ grep foo qux qax
+qux:foo
+qax:foo
+```
+
+The countless options you can give `grep` can change how it outputs it findings, whether it prints the lines where it finds `word` or just which files it found `word` in, ,whether it should output the files it *didn’t* find `word` in instead, and so on. It is one of the most useful search commands you have at your disposal on the command line, once you learn how to use it.
+
+
 ## Navigating the file system
 
 I won’t say much about the file system. You already know how the file system consist of a hierarchy of directories and files. The only thing to add to this, when it comes to shells, is that we have something called the *current (working) directory*, and all commands are relative to that place.
@@ -326,30 +352,7 @@ $ cd ..
 
 If you use `cd` with arguments, you will be send to your home directory, whatever that is. It depends on your platform, and it isn’t an important concept on a personal computer, but it is if you get an account on a shared system like our GenomeDK cluster. The home directory is the root of all your own files, kept separated from other users’ files.
 
-### grep
-
-The `grep` command lets you search in files. The name has a weird mnemonic, `grep` stands for “global, regular expression, print”, a name that made perfect sense in the Elder Days where it was a command you could give the `ed` editor, but today it is pure nonsense. Instead, `grep` has become a verb in its own right, and you will hear programmers talk about “grepping” for stuff.
-
-The simplest usage is `grep word file` that will search for `word` in the file `file` and print all the lines where `word` is found.
-
-A boring example is this:
-
-```sh
-$ grep foo qux
-foo
-```
-
-It prints a single `foo` as there is one line in `qux` that contains `foo`.
-
-If you search in more than one file, `grep` will also tell you which file it found `word` in.
-
-```sh
-$ grep foo qux qax
-qux:foo
-qax:foo
-```
-
-The countless options you can give `grep` can change how it outputs it findings, whether it prints the lines where it finds `word` or just which files it found `word` in, ,whether it should output the files it *didn’t* find `word` in instead, and so on. It is one of the most useful search commands you have at your disposal on the command line, once you learn how to use it.
+Try using `cd` to move around the directory hierarchy, and every time you end up somewhere new, use `pwd` to see where the shell thinks that you are.
 
 ## Arguments, standard input, output, and error, and redirecting
 
@@ -379,10 +382,100 @@ What the program does with the arguments is entirely up to the program. The shel
 
 When you write your own programs, you have access to the arguments that a user provides on the command line. Where you have them depends on the programming language you use, and I will show you how to get at them in Python, the language we use for this class, next week.
 
+Anyway, when you execute a command, you will be running a program, and that program gets the arguments you provided.
 
+![Process with arguments](figs/processes/process-with-args.png)
+
+It actually gets a little more. Every process you run has an "environment" where various variables are specified. You can see which variables your shell knows about using the command `env`. Some variables are passed along to the program, to its environment. The process for how that works is not important for us at this point, except that one of the variables is the working directory (`PWD`), so when you run a program, it knows in which directory it is running, so if any of the arguments are relative paths to files, it knows what they are relative to.
+
+![Process with arguments and environment](figs/processes/process-with-env.png)
+
+While this environment is sometimes important, I don't expect that it will be important in this class, so I will quietly ignore it from here on.
+
+With this alone, we would have a useful interface to running commands. We can call any program by putting it first in a command, and we can give the program any arguments it needs using the following values. If a command needs to read or write files, we can specify file names as arguments, and it will be able to find the files, either relative to the working directory or using an absolute path.
+
+This is how commands were usually run, but the UNIX command line adds two more idea, that turned out to be pure genius: pipes and standard pipes.
+
+Pipes are basically just files. In UNIX there isn’t much difference and they are implemented basically the same way. Just as you can read from or write to a file, you can read from and write to a file. Files can do a little more; you can move around in a file and read and write at different positions, but with pipes you either always read the next character in it or you write characters to it. That is the only difference.
+
+When a program is running, it automatically gets three of these pipes.[^2] I will show you have to get to them in Python next week.
+
+The three pipes are “standard input” or `stdin`, “standard output”, `stdout`, and “standard error”, `stderr`. The program can read from `stdin` and write to either of `stdout` or `stderr`. The way they are intended to be used is: any input that your program needs it can read from `stdin`—most program will use files you specify in the arguments, but they *should* also be able to read it from this pipe—and any output the program needs to write, it should write to `stdout`. The `stderr` is there if the program needs to write error or warning messages that shouldn’t be mixed with the actual output sent to `stdout`.
+
+![Command with pipes](figs/processes/process-with-pipes.png)
+
+I will ignore `stderr` in the following, since we only need it when something goes wrong (and why would something go wrong?).
+
+For an example of how this works, consider the shell. It is a program that takes input from you via the keyboard (or through the terminal on modern computers) and that writes output back to you.
+
+When you type something on the keyboard, what you type is sent to the shell to its standard input. When the shell needs to write something back to you, it writes it to its standard output (or error).
+
+![Shell with pipes](figs/processes/shell.png)
+
+The shell doesn't need to know if it is getting its input from another program (like the terminal program you are running) or from hardware (as in the good old days), and it doesn't need to know who is reading what it writes to `stdout`. It just writes. This decouples the shell from its surroundings in various ways, and is the reason that we can use the same shells today with terminal programs as people could in the '70s with hardware terminals, and why you can combine any terminal program with any shell with little if any difficulty. The two pipes is the interface to and from a program, and we don't need to write specialised code based on what might be at the other ends of them.
+
+When we called `cat` without any arguments earliere, a long time ago I know, I said that `cat` would then be reading from `stdin`. It will, but the `cat` program's `stdin` is connected to the keyboard you are writing on so it can see what you type. When you run a command in the shell, it will connect its own `stdin` to the command's `stdin`, so what you type gets forwarded to the command you run. Similarly, it will connect the command's `stdout` to its own, so what the command prints will be sent to whatever program or hardware or whatever it may be that the shell would have been printing to.
+
+![Shell with cat](figs/processes/shell-cat.png)
+
+This isn't that interesting in itself, though. You could think of it as an implementation detail that you shouldn't have to think about. However, there is one more clever trick up our sleeve: you can connect output pipes to input pipes to run data through a sequence of programs.
+
+You already know that the command `echo` prints its arguments.
+
+```sh
+$ echo foo bar baz
+foo
+bar
+baz
+```
+
+The command `wc` (word count) counts the number of lines, words, and characters in a file.
+
+```sh
+$ wc qux
+       3       3      12 qux
+```
+
+When `echo` prints its output, it does so to its `stdout`, and if you call `wc` without arguments it will read its input from its `stdin`, and you can connect these two pipes by putting a `|` (called pipe) between the two commands.
+
+```sh
+$ echo foo bar baz | wc
+       3       3      12
+```
+
+![echo piped to wc](figs/processes/echo-wc.png)
+
+The `echo` program doesn't know what is at the other end of its `stdout`. It is just a kind of file that it can write to. The `wc` program doesn't know what is at the other end of `stdin`, it just knows that it can read from that pipe. When I connect the two commands using the pipe operator, I connect the first command's `stdout` to the second command's `stdin`, and now whatever the output of the first command is, it will be the input to the second command. Such sequences of commands are called "pipelines" for obvious reasons.
+
+If you have to write a program that should interact with pipes, you treat them just like files. It will be a while before you learn how to work with files in any way that wouldn't also work with pipes, and it is very rare that this is necessary. So the pipe interface is essentially the same interface you needed to write if you were working with plain files, but because you have a mechanism of connecting one output pipe to another, you can string together simple commands to create more complicated ones.
+
+Because files and pipes are so similar, and because a file can do anything a pipe can do—a file you read from can always work as an input pipe and a file you write to can always be used as an output pipe—you can also connect pipes and files. How to do that, unfortunately, is not as standardised as the pipe operator, and it varies from shell to shell.
+
+If you want to connect a `stdout` to a file, so what a command writes to its `stdout` gets sent to the file instead, you use the `>` operator. We saw it already earlier when we wrote
+
+```sh
+$ echo foo bar baz > qux
+```
+
+Here, instead of sending `echo`’s standard out to the terminal to be printed, we redirected it to the file `qux`. When `echo` printed, it got written to the file.
+
+Likewise, on UNIX shells like bash, zsh, or fish, you can connect `stdin` to a file using `<`. That is why `cat qux` and `cat < qux` showed the same output, although what happened inside `cat` was slightly different. In the first command, `cat` finds `qux` as an argument, opens that file, and reads from it. In the second, it doesn’t get any arguments, but instead it can read the content of `qux` from its `stdin`, since `< qux` connected the two.
+
+In PowerShell, the `<` redirection doesn’t work.[^3] It is not difficult getting a file to the `stdin` of a command, though, when we can still connect one `stdout` to another `stdin` with `|`. We can just go through `cat`. It will print a file to its `stdout` and then we can connect `cat` to the command we want to read the file as stdin.
+
+```sh
+$ cat qux | wc
+       3       3      12
+```
+
+You can also redirect the `stderr` pipe, but I cannot off the top of my head think of two shells that do this exactly the same way, so we will leave the file redirection here.
 
 
 ## The UNIX command line paradigm—the pipeline
 
 
 [^1]: When I refer to the UNIX command line here, I don't mean to imply that this particular way of interacting with a computer is exclusively a UNIX feature. The command line was used before UNIX and variants such as DOS developed later. The particular way of interpreting a command line, and in particular the way to connect commands in pipelines, however, originated in UNIX.
+
+[^2]: You can create more pipes in various ways and use it to set up communication between running programs, but that is well beyond the scope of this class, so we will just leave it at the three our programs are born with.
+
+[^3]: I have no idea why PowerShell doesn’t implement redirection for standard input, it seems like a massive oversight to me, but it is what it is.
