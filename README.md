@@ -473,9 +473,116 @@ You can also redirect the `stderr` pipe, but I cannot off the top of my head thi
 
 ## The UNIX command line paradigm—the pipeline
 
+The key property of the UNIX command line is the way that you can combine tools using redirection and pipelines. The simple ideas of programs communicating through files or pipes and connecting them so the output of one command becomes the input of the next gives you great flexibility in how you can communicate with the computer. Not the same power as you get if you write programs in general programming languages, but far more than you might imagine.
+
+Countless of times I have seen students write programs to solve problems that the combination of three or four commands in a pipeline would have solved for them in a few seconds time.
+
+The basic philosophy is this: write *simple* tools that solve *one problem* (but does it well), and then *combine* the tools you need to solve more difficult problems. The only thing it takes is to write tools that can read their input from `stdin` and that writes output to `stdout` that is reasonably easy for other programs to parse. It really is that simple. Sadly too many tools in bioinformatics are written by people who do not understand this, and insist on other ways of communication, making it far more difficult to use the tools than it should be. But that is a rant for another day.
+
+You should never do this! And if you take the time to learn how to use pipelines on the UNIX command line, you will soon be far more efficient than those who pissed away their time on GUI tools. You will quickly learn how to write even complex queries that the computer will immediately answer, and with more flexibility than any graphical interface can ever provide. Once you get there, you will value the way command line processes should communicate, and you will ensure that your programs play well with others.
+
+## Example pipes
+
+Let’s see a few examples of where we can solve a non-trivial problem with a few commands.
+
+
+
+### Permuted comparison
+
+Let’s say we have to files and we want to know if they are the same. We already know that we can do this with `cmp` or `diff`, so that is simple enough. However, what I have in mind is two files that describe genomic features, where each line describes features for a given genomic position, *but the order of the lines do not matter*. If both files have the same features at the same genomic coordinates, they should be considered identical, but the files do not have to be byte-by-byte identical. In other words, I want to know if one file is a permutation of the lines in the other. That is more complicated, and we don’t have a tool for checking exactly that!
+
+However, if one file is a permutation of the lines in the other, then the *sorted* lines should be the same, so I can sort the lines in the files and then compare them.
+
+Take our `qux` and `qax`. They look like this
+
+```sh
+$ cat qux
+foo
+bar
+baz
+$ cat qax
+foo
+baz
+bar
+```
+
+I can sort the lines using the command `sort`, and then I get
+
+```sh
+$ sort qux
+bar
+baz
+foo
+$ sort qax
+bar
+baz
+foo
+```
+
+I can immediately see that the files are identical when sorted in this case, of course, but if I had thousands or millions of lines it would be trickier. Instead, I want to compare the two sorted files, and I will use `diff` for that.
+
+In `bash` I can do this:
+
+```sh
+$ diff <(sort qux) <(sort qax)
+```
+
+In `fish` I can do this:
+
+```sh
+$ diff (sort qux | psub) (sort qax | psub)
+```
+
+In both cases, the syntax `<(…)` or `(… | psub)` turns the output of a command into a file that `diff` can take as argument. Commands only have one `stdin` and that doesn’t suffice when we have two inputs, and this is a way to get around that.[^4]
+
+If you use PowerShell, then you can’t do it as easy as this, sorry. To the best of my knowledge, PowerShell doesn’t have [process substitution](https://en.wikipedia.org/wiki/Process_substitution). You can still get around it, of course, if you save the sorted files
+
+```sh
+$ sort qux > s-qux
+$ sort qax > s-qax
+$ diff qux qax
+```
+
+but you end up using more disk space when you have both files stored there twice.
+
+We can get around that by explicitly making a pipe that looks like a file and give `diff` the file name of the pipe.
+
+You can make a pipe with the command `mkfifo`
+
+```sh
+$ mkfifo /tmp/s-qax
+```
+
+Then you can run a sort that writs to the pipe by redirecting the `stdout` to the pipe. When you do this, you want the command to run in the background, because it will block until someone reads from the pipe, and we can’t wait for that—we would wait forever. If you write `&` after a command, the program will run but you can still communicate with the shell, so we can do that like this:
+
+```sh
+$ sort qax > /tmp/s-qax &
+```
+
+Now we have one of the sorted files sitting in a pipe; the `sort` command will generate a line at a time and write it to the pipe, and `diff` can read it from there. The other, we can write to `diff`’s `stdin`. If you want `diff` to read one of the input files from `stdin`, you give it the argument `-`. This is a common way of specifying that an argument should be the standard input or output, and many tools support it. You should as well when you write your own. Anyway, the `diff` command looks like this:
+
+```sh
+$ sort qux | diff - /tmp/s-qax
+```
+
+and if you want to clean up after yourself, you can delete the pipe we created when we are done:
+
+```sh
+$ rm /tmp/s-qax
+```
+
+
+
+
+
+
+
+
 
 [^1]: When I refer to the UNIX command line here, I don't mean to imply that this particular way of interacting with a computer is exclusively a UNIX feature. The command line was used before UNIX and variants such as DOS developed later. The particular way of interpreting a command line, and in particular the way to connect commands in pipelines, however, originated in UNIX.
 
 [^2]: You can create more pipes in various ways and use it to set up communication between running programs, but that is well beyond the scope of this class, so we will just leave it at the three our programs are born with.
 
 [^3]: I have no idea why PowerShell doesn’t implement redirection for standard input, it seems like a massive oversight to me, but it is what it is.
+
+[^4]: The `diff` command can take one input file from its `stdin`, so we could sort *one* of the files with `sort qux | diff - qax` where the `-` tells `diff` that it should read that file from `stdin`. The problem we have here is that we need to sort both of the files.
