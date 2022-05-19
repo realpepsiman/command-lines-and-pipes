@@ -118,3 +118,5 @@ and then hit TAB. Maybe hit TAB twice; some shells won't auto-complete if your p
 
 The exact way that shells auto-complete depends on the shell. Some can handle only paths, other know the commands you have and can auto-complete options and such as well. Often, it is something you can configure. For now, auto-completing paths will suffice, but get used to using auto-completion and not to typing out long paths by yourself.
 
+That was it for this exercise, I hope it wasn't too painful. Go up one directory level (`cd ..`) and then enter the next one.
+
