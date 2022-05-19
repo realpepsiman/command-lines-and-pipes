@@ -632,6 +632,69 @@ There are several commands involved here—two applications of `sort`, one of `u
 
 With a little bit of practise, writing a pipeline like this is second nature, and you solve problems of this kind in minutes if not seconds.
 
+### Fixing a tab-separated file
+
+Some dodgy collaborator sent you a gzip'ed tab-separated-values file, but your analysis tools are complaining about it. So you want to have a look at it.
+
+The first problem you run into is that it is a binary file, so looking at it with `head`, `less`, or `more` isn't much use.
+
+```sh
+$ head foo.tsv.gz
+1�bfoo.tsvKT04RHV0�3�JR043͸���B����1W*HA"XA����BP����֔
+                                                     �`YB
+```
+
+You can always unzip it, of course, but it is huge and you don't feel like filling your disk with it. Not to worry, you can unzip it and write it to `gunzip`'s `stdout` and have a look, without unzipping the entire file.
+
+```sh
+$ gunzip < foo.tsv.gz | head
+a 12 c 1.4
+b 13 c 1.6
+c 14 d 2.3
+e 12 a 1.4
+d 16 b 2.1
+b 14 c 1.5
+```
+
+If you are on PowerShell and don't have the `<` redirection, `cat foo.tsv.gz | gunzip | head` will work just as well.
+
+The problem appears to be that the columns are separated by a space and not a tab. (This happens more often than you would think). To get your other tools to read the file, you need to translate spaces to tabs, and we have just the tool for that, `tr`:
+
+```sh
+$ gunzip < foo.tsv.gz | tr " " "\t" | head
+a	12	c	1.4
+b	13	c	1.6
+c	14	d	2.3
+e	12	a	1.4
+d	16	b	2.1
+b	14	c	1.5
+```
+
+So, to fix the file, we can run it through `gunzip` to get a text file, through `tr` to change the spaces to tabs, and then through `gzip` to zip it again:
+
+```sh
+$ gunzip < foo.tsv.gz | tr " " "\t" | gzip > bar.tsv.gz
+```
+
+You might feel tempted to write the result back into `foo.tsv.gz` here, but you have to be careful. If you try that, you will be writing to the same file that you are reading from, and nothing good will come from that. You unfortunately do need to keep a copy around at this stage.
+
+We can check if everything went well
+
+```sh
+$ cat bar.tsv.gz | gunzip | head
+a	12	c	1.4
+b	13	c	1.6
+c	14	d	2.3
+e	12	a	1.4
+d	16	b	2.1
+b	14	c	1.5
+```
+
+and then move `bar.tsv.gz` to `foo.tsv.gz` to rename the fixed file to `foo.tsv.gz`.
+
+```sh
+$ mv bar.tsv.gz foo.tsv.gz
+```
 
 
 ### Permuted comparison
