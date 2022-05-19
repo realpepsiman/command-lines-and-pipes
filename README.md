@@ -826,6 +826,7 @@ $ cd ..
 
 1. [Directories and navigating them](1-dirs-navi/README.md)
 2. [Creating directories and files and moving them around](2-dirs-files-modify/README.md)
+3. [Using wild-cards](3-wildcards/README.md)
 
 
 
