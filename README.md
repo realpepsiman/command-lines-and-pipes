@@ -790,7 +790,41 @@ $ sort qux | diff - /tmp/s-qax
 $ rm /tmp/s-qax
 ```
 
+## Exercises
 
+Now it is time to do some exercises. Nothing as advanced as what you just saw--that was just a teaser for how you can use simple commands for moderatly complicated tasks without much effort, once you master the command line. It takes time to learn how to use command line tools efficiently, but it is well worth the effort. The exercises are just to get you started down this path.
+
+First, clone this repository to your own computer, if you haven't done so already. You can go to the top of this web-page, find the green button that says "Code" and copy the URL, and then the command
+
+```sh
+$ git clone ≪the url you copied≫
+```
+
+will copy the repository to the directory you are now.
+
+Alternatively, you can clone the repository to somewhere else using GitHub Desktop or VS Code.
+
+In either case, your first exercise is to find out where you have cloned the directory to, and then move your shell over there using the `cd` command. Once you are there, the exercises are in sub-directories, you can see which are there with
+
+```sh
+$ ls
+```
+
+In each directory you will find a `README.md` file that describes the exercise. You can read it using `cat`, `more`, or `less`, or you can click on them here on the web-page.  When you want to work on an exercise, go into the directory with
+
+```sh
+$ cd ≪directory≫
+```
+
+and when you are done, you can go back to the main directory with
+
+```sh
+$ cd ..
+```
+
+### Sub-directories
+
+1. [Dirs and navigating them](1-dirs-navi/README.md)
 
 
 
