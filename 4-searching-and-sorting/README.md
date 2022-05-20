@@ -135,3 +135,59 @@ $ grep -i ctib *.txt | sed 's/:.*$//' | uniq -c
 ```
 
 Almost what we want. But we want the file with the most occurrences att the top. Can you get it there?
+
+Another way to do this is to use `grep`'s `-c` (count) option. It will print each file name with a count of occurrences after it:
+
+```sh
+$ grep -ic ctib *.txt
+bar.txt:1
+baz.txt:0
+foo.txt:1
+qax.txt:9
+qux.txt:0
+```
+
+Now `grep` has already done most of the work for us, we just need to sort the results.
+
+Just running it through `sort` is not going to cut it. That will sort the result by file name and not by count, since it will simply sort the lines lexicographically. However, `sort` can do more than that. The `-t` option tells it that the data consists of a number of columns, separated by some field character. We have two columns, separated by `:`, so `-t ':'` will tell `sort` that we have two columns separated by `:`. Then, we want to sort by the second column, or "key", and the option `-k` does that: `-k2` tells `sort` to sort by the second key. Add `-n` to sort nummerically and `-r` to get the largest number at the top and we are done.
+
+```sh
+$ grep -ic ctib *.txt | sort -t ':' -k2 -rn
+qax.txt:9
+foo.txt:1
+bar.txt:1
+qux.txt:0
+baz.txt:0
+```
+
+If you want to remove the files that have zero occurrences, you can use `grep` once again. The option `-v` tells `grep` to print the lines that do *not* match the search string and the string `:0$` specifies a colon followed by a zero and then a newline, and those are the ones we want to remove.
+
+```sh
+$ grep -ic ctib *.txt | sort -t ':' -k2 -rn | grep -v ':0$'
+qax.txt:9
+foo.txt:1
+bar.txt:1
+```
+
+ Now, what if we needed the actual file names and not file names together with counts? We might want to use the file names further down a pipeline. Can we remove the counts? Of course, in thousands of different ways. An easy one is using the command `cut`. It handles files that it can interpret as columns--similar to what `sort` just did for us--and we can use it to pick out columns that we want. The `-d` option specifies the column separator (it does roughly the same as `-t` for `sort`) and the `-f` flag specifies which field (column) we want, so `cut -d: -f1` will split lines into columns on `:` and pick the first column.
+
+```sh
+$ grep -ic ctib *.txt | sort -t ':' -k2 -rn | grep -v ':0$' | cut -d: -f1
+qax.txt
+foo.txt
+bar.txt
+```
+
+Our friend `sed` can also do it, but the command is far less readable:
+
+```sh
+$ grep -ic ctib *.txt | sort -t ':' -k2 -rn | grep -v ':0$' | sed 's/^\(.*\):.*$/\1/'
+qax.txt
+foo.txt
+bar.txt
+```
+
+The reason `sed` commands are so unreadable is that the tool can do far more than simple tools like `cut` and at the same time it was written by people who thought key strokes were a scarce resource. The `s/.../.../` part means substitute the first part by the second part as before. The `^\(.*\):.*$` means any string that starts at the beginning of a line, `^`, matches anything `.*` up to a `:` and then anything again `.*` until the end of the line `$` and the `\(...\)` bit tells `sed` to remember that bit of string so we can get to it later. It is the first such grouping and we can get at it with `\1`. So with `s/.../\1/` we replace the first bit with the first `\(...\)` grouping in it. With time you will learn to write commands like this, but they will always be hard to read... Anyway, `sed` is a powertool and when `cut` will do, you will want to use the simpler tool.
+
+
+
