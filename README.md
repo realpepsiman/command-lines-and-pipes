@@ -628,6 +628,8 @@ $ sort qux qax qix | uniq -c | sort -n | tail -n 3
    3 foo
 ```
 
+Alternatively, you could use `sort -r` for the second call to sort in reverse order and then use `head` to get top three instead of `tail` to get the bottom three.
+
 There are several commands involved here—two applications of `sort`, one of `uniq` and one of either `head` or `tail`—but each command does one single simple thing; it is the combination that solves the problem.
 
 With a little bit of practise, writing a pipeline like this is second nature, and you solve problems of this kind in minutes if not seconds.
@@ -676,7 +678,7 @@ So, to fix the file, we can run it through `gunzip` to get a text file, through 
 $ gunzip < foo.tsv.gz | tr " " "\t" | gzip > bar.tsv.gz
 ```
 
-You might feel tempted to write the result back into `foo.tsv.gz` here, but you have to be careful. If you try that, you will be writing to the same file that you are reading from, and nothing good will come from that. You unfortunately do need to keep a copy around at this stage.
+You might feel tempted to write the result back into `foo.tsv.gz` here, but you have to be careful. If you try that, you will be writing to the same file that you are reading from, and nothing good will come from that. You unfortunately do need to keep a copy around at this stage. (Some shells have syntax for avoiding this, but not all. Check the documentation for "noclobber" redirection if you want to know if your shell can do it).
 
 We can check if everything went well
 
