@@ -308,7 +308,7 @@ The countless options you can give `grep` can change how it outputs it findings,
 
 ## Navigating the file system
 
-I won’t say much about the file system. You already know how the file system consist of a hierarchy of directories and files. The only thing to add to this, when it comes to shells, is that we have something called the *current (working) directory*, and all commands are relative to that place.
+You already know how the file system consist of a hierarchy of directories and files. The only thing to add to this, when it comes to shells, is that we have something called the *current (working) directory*, and all commands are relative to that place.
 
 The command `pwd` will show you where the shell’s current working directory is. You get a string of `/`-separated names. The slash is used to separate directories on UNIX (you might be used to backslash on Windows). Whenever you provide a file-name to a command, it will be interpreted in one of two ways. 
 
@@ -356,15 +356,15 @@ Try using `cd` to move around the directory hierarchy, and every time you end up
 
 ## Arguments, standard input, output, and error, and redirecting
 
-I know that it all looks confusing and overwhelming at this point. You’ve seen a tiny fraction of the commands you have available in a shell, and all of them take an obscene number of options, and there is no way that you can remember the commands or the options. Luckily, with `man` you don’t have to remember the options, but if you don’t know the name of a command, `man` is of no use.
+It all looks confusing and overwhelming at this point. You’ve seen a tiny fraction of the commands you have available in a shell, and all of them take an obscene number of options, and there is no way that you can remember the commands or the options. Luckily, with `man` you don’t have to remember the options, but if you don’t know the name of a command, `man` is of no use.
 
 It *is* overwhelming; it *is* confusing. It is not just you. There *are* too many commands to remember, and every time someone writes a new tool, yourself included, there is one more command to add to the toolbox.
 
 Have no fear, though. It is just like learning a new language. A new language contains tens or hundreds of thousands of words and you need to learn a lot of them before you can speak the language, and at least you have fewer words on the command line than in English, Swahili or Dutch.
 
-The more you use the language, the more words you will learn, and soon you will speak a passable command line, if not yet completely fluent. The only thing you need to do to keep learning is to, whenever you want to do something, X, ask the question: “how do I do X in my shell?”. You can ask me, you can ask a friend, and Google is your friend if you have no others. Slowly but surely you will increase your vocabulary.
+The more you use the language, the more words you will learn, and soon you will speak a passable command line, if not yet completely fluent. The only thing you need to do to keep learning is to, whenever you want to do something, X, ask the question: “how do I do X in my shell?”. You can ask your instructor, you can ask a friend, and Google is your friend if you have no others. Slowly but surely you will increase your vocabulary.
 
-Luckily, the grammar is much simpler for a shell than a natural language. It is more complicated than I will show you here—and each shell is a separate language with its own grammar when it comes to the more complicated stuff—but it is simpler than the natural languages you already speak.
+Luckily, the grammar is much simpler for a shell than a natural language. It is more complicated than we will show you here—and each shell is a separate language with its own grammar when it comes to the more complicated stuff—but it is simpler than the natural languages you already speak.
 
 I will show you the basic grammar, though, and illustrate how a simple grammar gives you a powerful language.
 
@@ -380,7 +380,7 @@ When you write a command like that, the shell will find a program called `some-c
 
 What the program does with the arguments is entirely up to the program. The shell doesn’t know, nor does it care. That is the program’s responsibility. The way to find out what they mean is using `man some-command`.
 
-When you write your own programs, you have access to the arguments that a user provides on the command line. Where you have them depends on the programming language you use, and I will show you how to get at them in Python, the language we use for this class, next week.
+When you write your own programs, you have access to the arguments that a user provides on the command line. Where you have them depends on the programming language you use, and we will show you how to get at them in Python, the language we use for this class, next week.
 
 Anyway, when you execute a command, you will be running a program, and that program gets the arguments you provided.
 
@@ -390,21 +390,21 @@ It actually gets a little more. Every process you run has an "environment" where
 
 ![Process with arguments and environment](figs/processes/process-with-env.png)
 
-While this environment is sometimes important, I don't expect that it will be important in this class, so I will quietly ignore it from here on.
+While this environment is sometimes important, it probably will not be important in this class, so we will quietly ignore it from here on.
 
 With this alone, we would have a useful interface to running commands. We can call any program by putting it first in a command, and we can give the program any arguments it needs using the following values. If a command needs to read or write files, we can specify file names as arguments, and it will be able to find the files, either relative to the working directory or using an absolute path.
 
-This is how commands were usually run, but the UNIX command line adds two more idea, that turned out to be pure genius: pipes and standard pipes.
+This is how commands were usually run, but the UNIX command line adds two more ideas, that turned out to be pure genius: pipes and standard pipes.
 
-Pipes are basically just files. In UNIX there isn’t much difference and they are implemented basically the same way. Just as you can read from or write to a file, you can read from and write to a file. Files can do a little more; you can move around in a file and read and write at different positions, but with pipes you either always read the next character in it or you write characters to it. That is the only difference.
+Pipes are basically just files. In UNIX there isn’t much difference and they are implemented basically the same way. Just as you can read from or write to a file, you can read from and write to a pipe. Files can do a little more; you can move around in a file and read and write at different positions, but with pipes you either always read the next character in it or you write characters to it. That is the only difference.
 
-When a program is running, it automatically gets three of these pipes.[^2] I will show you have to get to them in Python next week.
+When a program is running, it automatically gets three of these pipes.[^2] We will show you how to get to them in Python next week.
 
 The three pipes are “standard input” or `stdin`, “standard output”, `stdout`, and “standard error”, `stderr`. The program can read from `stdin` and write to either of `stdout` or `stderr`. The way they are intended to be used is: any input that your program needs it can read from `stdin`—most program will use files you specify in the arguments, but they *should* also be able to read it from this pipe—and any output the program needs to write, it should write to `stdout`. The `stderr` is there if the program needs to write error or warning messages that shouldn’t be mixed with the actual output sent to `stdout`.
 
 ![Command with pipes](figs/processes/process-with-pipes.png)
 
-I will ignore `stderr` in the following, since we only need it when something goes wrong (and why would something go wrong?).
+We will ignore `stderr` in the following, since we only need it when something goes wrong (and why would something go wrong?).
 
 For an example of how this works, consider the shell. It is a program that takes input from you via the keyboard (or through the terminal on modern computers) and that writes output back to you.
 
@@ -445,7 +445,7 @@ $ echo foo bar baz | wc
 
 ![echo piped to wc](figs/processes/echo-wc.png)
 
-The `echo` program doesn't know what is at the other end of its `stdout`. It is just a kind of file that it can write to. The `wc` program doesn't know what is at the other end of `stdin`, it just knows that it can read from that pipe. When I connect the two commands using the pipe operator, I connect the first command's `stdout` to the second command's `stdin`, and now whatever the output of the first command is, it will be the input to the second command. Such sequences of commands are called "pipelines" for obvious reasons.
+The `echo` program doesn't know what is at the other end of its `stdout`. It is just a kind of file that it can write to. The `wc` program doesn't know what is at the other end of `stdin`, it just knows that it can read from that pipe. When we connect the two commands using the pipe operator, we connect the first command's `stdout` to the second command's `stdin`, and now whatever the output of the first command is, it will be the input to the second command. Such sequences of commands are called "pipelines" for obvious reasons.
 
 If you have to write a program that should interact with pipes, you treat them just like files. It will be a while before you learn how to work with files in any way that wouldn't also work with pipes, and it is very rare that this is necessary. So the pipe interface is essentially the same interface you needed to write if you were working with plain files, but because you have a mechanism of connecting one output pipe to another, you can string together simple commands to create more complicated ones.
 
@@ -468,14 +468,14 @@ $ cat qux | wc
        3       3      12
 ```
 
-You can also redirect the `stderr` pipe, but I cannot off the top of my head think of two shells that do this exactly the same way, so we will leave the file redirection here.
+You can also redirect the `stderr` pipe, there is practically not two shells that do this exactly the same way, so we will leave the file redirection here.
 
 
 ## The UNIX command line paradigm—the pipeline
 
 The key property of the UNIX command line is the way that you can combine tools using redirection and pipelines. The simple ideas of programs communicating through files or pipes and connecting them so the output of one command becomes the input of the next gives you great flexibility in how you can communicate with the computer. Not the same power as you get if you write programs in general programming languages, but far more than you might imagine.
 
-Countless of times I have seen students write programs to solve problems that the combination of three or four commands in a pipeline would have solved for them in a few seconds time.
+Countless of times we have seen students write programs to solve problems that the combination of three or four commands in a pipeline would have solved for them in a few seconds time.
 
 The basic philosophy is this: write *simple* tools that solve *one problem* (but does it well), and then *combine* the tools you need to solve more difficult problems. The only thing it takes is to write tools that can read their input from `stdin` and that writes output to `stdout` that is reasonably easy for other programs to parse. It really is that simple. Sadly too many tools in bioinformatics are written by people who do not understand this, and insist on other ways of communication, making it far more difficult to use the tools than it should be. But that is a rant for another day.
 
